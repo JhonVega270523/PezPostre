@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>Pez Postre - Sistema de Gestión de Rutas</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Sweet Alert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        :root {
+            --admin-bg: #e8f5e9;
+            --admin-sidebar: #c8e6c9;
+            --admin-accent: #81c784;
+            --despachador-bg: #e3f2fd;
+            --despachador-sidebar: #bbdefb;
+            --despachador-accent: #64b5f6;
+            --domiciliario-bg: #ffebee;
+            --domiciliario-sidebar: #ffcdd2;
+            --domiciliario-accent: #e57373;
+            --primary-color: #6f4e37;
+            --secondary-color: #c4a484;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        body.admin-theme {
+            background-color: var(--admin-bg);
+        }
+        
+        body.despachador-theme {
+            background-color: var(--despachador-bg);
+        }
+        
+        body.domiciliario-theme {
+            background-color: var(--domiciliario-bg);
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #8b5e3c);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 0.8rem 1rem;
+        }
+        
+        .navbar-brand {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .navbar-brand i {
+            margin-right: 8px;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #2c1e14, var(--primary-color));
+            color: white;
+            padding: 1.5rem 0;
+            margin-top: auto;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+        }
+        
+        .btn-pez {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 25px;
+            padding: 10px 25px;
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-pez:hover {
+            background-color: #5a3e2b;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+        
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+        
+        .status-pendiente {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .status-enruta {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .status-entregado {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .sidebar {
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            height: fit-content;
+        }
+        
+        .admin-sidebar {
+            background-color: var(--admin-sidebar);
+            border: 1px solid var(--admin-accent);
+        }
+        
+        .despachador-sidebar {
+            background-color: var(--despachador-sidebar);
+            border: 1px solid var(--despachador-accent);
+        }
+        
+        .domiciliario-sidebar {
+            background-color: var(--domiciliario-sidebar);
+            border: 1px solid var(--domiciliario-accent);
+        }
+        
+        .route-card {
+            border-left: 5px solid var(--primary-color);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .action-buttons .btn {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+        }
+        
+        .autocomplete-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .autocomplete-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        
+        .autocomplete-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .timeline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .timeline-item {
+            flex: 1 1 200px;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1rem;
+            }
+            
+            .status-badge {
+                font-size: 0.75rem;
+                padding: 3px 10px;
+            }
+            
+            .action-buttons .btn {
+                padding: 4px 8px;
+                font-size: 0.75rem;
+            }
+            
+            .timeline-item {
+                flex: 1 1 100%;
+            }
+        }
+        
+        .welcome-message {
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-welcome {
+            background-color: #a5d6a5;
+            color: #1e3a1e;
+        }
+        
+        .despachador-welcome {
+            background-color: #90caf9;
+            color: #0d3c5e;
+        }
+        
+        .domiciliario-welcome {
+            background-color: #ef9a9a;
+            color: #5f2b2b;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-fish"></i>
+            Pez Postre
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item" id="navDashboard">
+                    <a class="nav-link" href="#" onclick="mostrarDashboard()">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item" id="navLogout">
+                    <a class="nav-link" href="#" onclick="cerrarSesion()">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenido Principal -->
+<div class="container mt-4" id="mainContent">
+    <!-- Login Section -->
+    <div id="loginSection" class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card p-4">
+                <div class="text-center mb-4">
+                    <div class="mb-3">
+                        <i class="fas fa-fish fa-4x" style="color: var(--primary-color);"></i>
+                    </div>
+                    <h2 class="mt-2">Pez Postre</h2>
+                    <p class="text-muted">Sistema de Gestión de Rutas</p>
+                </div>
+                
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user"></i> Usuario
+                        </label>
+                        <input type="text" class="form-control" id="username" placeholder="Ingrese su usuario" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock"></i> Contraseña
+                        </label>
+                        <input type="password" class="form-control" id="password" placeholder="Ingrese su contraseña" required>
+                    </div>
+                    <button type="submit" class="btn btn-pez w-100">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
+                </form>
+                
+                <div class="mt-4 p-3 bg-light rounded">
+                    <p class="mb-1"><strong>Credenciales de prueba:</strong></p>
+                    <small class="text-muted d-block">👑 Admin: admin / 123</small>
+                    <small class="text-muted d-block">📦 Despachador: despachador / 123</small>
+                    <small class="text-muted d-block">🛵 Domiciliario: domiciliario / 123</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="hidden">
+        <div class="row">
+            <div class="col-lg-3 mb-4">
+                <!-- Sidebar dinámico según rol -->
+                <div id="sidebar-container"></div>
+            </div>
+            
+            <div class="col-lg-9 mb-4">
+                <!-- Sección de Crear Usuario (Admin) -->
+                <div id="crearUsuarioSection" class="card p-4 mb-4 hidden">
+                    <h4 class="mb-3"><i class="fas fa-user-plus"></i> Crear Nuevo Usuario</h4>
+                    <hr>
+                    <form id="crearUsuarioForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre Completo</label>
+                                <input type="text" class="form-control" id="newUserName" placeholder="Ej: Juan Pérez" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Usuario</label>
+                                <input type="text" class="form-control" id="newUserUsername" placeholder="Ej: juan123" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="newUserPass" placeholder="********" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Rol</label>
+                                <select class="form-select" id="newUserRole" required>
+                                    <option value="admin">Administrador</option>
+                                    <option value="despachador">Despachador</option>
+                                    <option value="domiciliario">Domiciliario</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-pez">
+                                <i class="fas fa-save"></i> Crear Usuario
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="ocultarCrearUsuario()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Sección de Crear/Editar Ruta -->
+                <div id="crearRutaSection" class="card p-4 mb-4 hidden">
+                    <h4 class="mb-3"><i class="fas fa-route"></i> <span id="rutaFormTitle">Asignar Nueva Ruta</span></h4>
+                    <hr>
+                    <form id="crearRutaForm">
+                        <input type="hidden" id="editingRouteId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Domiciliario</label>
+                                <select class="form-select" id="domiciliarioAsignado" required>
+                                    <option value="">Seleccionar domiciliario</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cliente</label>
+                                <div class="autocomplete-container">
+                                    <input type="text" class="form-control" id="clienteBusqueda" placeholder="Escriba nombre del cliente" autocomplete="off">
+                                    <input type="hidden" id="clienteSeleccionadoId">
+                                    <div id="autocomplete-suggestions" class="autocomplete-suggestions hidden"></div>
+                                </div>
+                                <small class="text-muted">Escriba para buscar o ingrese un cliente nuevo</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono Cliente</label>
+                                <input type="text" class="form-control" id="telefonoCliente" placeholder="Ej: 3001234567" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Dirección Cliente</label>
+                                <input type="text" class="form-control" id="direccionCliente" placeholder="Ej: Calle 123 #45-67" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Punto de Referencia</label>
+                                <input type="text" class="form-control" id="puntoReferencia" placeholder="Ej: Casa verde, portón blanco">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Barrio</label>
+                                <input type="text" class="form-control" id="barrioCliente" placeholder="Ej: El Poblado">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Cantidad de Tortas</label>
+                                <input type="number" class="form-control" id="cantidadTortas" min="1" placeholder="Ej: 2" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Método de Pago</label>
+                                <select class="form-select" id="metodoPago" required>
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Transferencia">Transferencia</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Total a Pagar</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="totalPagar" min="0" step="1000" placeholder="45000" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-pez">
+                                <i class="fas fa-save"></i> Guardar Ruta
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="ocultarCrearRuta()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Sección de Gestión de Usuarios -->
+                <div id="gestionUsuariosSection" class="card p-4 mb-4 hidden">
+                    <h4 class="mb-3"><i class="fas fa-users-cog"></i> Gestión de Usuarios</h4>
+                    <hr>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Usuario</th>
+                                    <th>Rol</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usuariosTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-pez mt-3" onclick="ocultarGestionUsuarios()">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </button>
+                </div>
+                
+                <!-- Sección de Gestión de Clientes -->
+                <div id="gestionClientesSection" class="card p-4 mb-4 hidden">
+                    <h4 class="mb-3"><i class="fas fa-user-tie"></i> Gestión de Clientes</h4>
+                    <hr>
+                    <div class="mb-3">
+                        <button class="btn btn-pez" onclick="mostrarCrearCliente()">
+                            <i class="fas fa-user-plus"></i> Nuevo Cliente
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Teléfono</th>
+                                    <th>Dirección</th>
+                                    <th>Barrio</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientesTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-pez mt-3" onclick="ocultarGestionClientes()">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </button>
+                </div>
+                
+                <!-- Sección de Crear/Editar Cliente -->
+                <div id="crearClienteSection" class="card p-4 mb-4 hidden">
+                    <h4 class="mb-3"><i class="fas fa-user-plus"></i> <span id="clienteFormTitle">Nuevo Cliente</span></h4>
+                    <hr>
+                    <form id="crearClienteForm">
+                        <input type="hidden" id="editingClienteId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre Completo</label>
+                                <input type="text" class="form-control" id="clienteNombre" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="clienteTelefono" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" class="form-control" id="clienteDireccion" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Barrio</label>
+                                <input type="text" class="form-control" id="clienteBarrio">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Punto de Referencia</label>
+                                <input type="text" class="form-control" id="clienteReferencia">
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-pez">
+                                <i class="fas fa-save"></i> Guardar Cliente
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="ocultarCrearCliente()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Sección de Gestión de Rutas -->
+                <div id="gestionRutasSection" class="card p-4">
+                    <h4 class="mb-3">
+                        <i class="fas fa-route"></i> 
+                        <span id="rutasTitle">Gestión de Rutas</span>
+                    </h4>
+                    <hr>
+                    
+                    <!-- Filtros solo visibles para Admin y Despachador -->
+                    <div id="filtrosSection" class="filter-section mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="filterDomiciliario" class="form-label">
+                                    <i class="fas fa-user-tie"></i> Filtrar por Domiciliario:
+                                </label>
+                                <select class="form-select" id="filterDomiciliario" onchange="aplicarFiltros()">
+                                    <option value="">Todos los domiciliarios</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="filterEstado" class="form-label">
+                                    <i class="fas fa-filter"></i> Filtrar por Estado:
+                                </label>
+                                <select class="form-select" id="filterEstado" onchange="aplicarFiltros()">
+                                    <option value="">Todos los estados</option>
+                                    <option value="pendiente">Pendiente</option>
+                                    <option value="enruta">En Ruta</option>
+                                    <option value="entregado">Entregado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="rutasContainer" class="rutas-container">
+                        <!-- Las rutas se cargarán dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <h5><i class="fas fa-fish"></i> Pez Postre</h5>
+                <p class="mb-1">La mejor torta de pescado</p>
+                <p class="mb-1"><small>Desde 2025</small></p>
+            </div>
+            <div class="col-md-4 mb-3 mb-md-0">
+                <h5>Contacto</h5>
+                <p class="mb-1"><i class="fas fa-phone"></i> +57 123 456 7890</p>
+                <p class="mb-1"><i class="fas fa-envelope"></i> info@pezpostre.com</p>
+                <p class="mb-1"><i class="fas fa-map-marker-alt"></i> Medellín, Colombia</p>
+            </div>
+            <div class="col-md-4">
+                <h5>Horarios</h5>
+                <p class="mb-1">Lunes a Domingo 8am - 4pm</p>
+            </div>
+        </div>
+        <hr class="mt-3" style="background-color: rgba(255,255,255,0.1);">
+        <div class="text-center">
+            <small>&copy; 2026 Pez Postre - Todos los derechos reservados</small>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Datos iniciales
+    const initialData = {
+        users: [
+            { id: 1, username: 'admin', password: '123', role: 'admin', name: 'Admin Principal' },
+            { id: 2, username: 'despachador', password: '123', role: 'despachador', name: 'Carlos Despachador' },
+            { id: 3, username: 'domiciliario', password: '123', role: 'domiciliario', name: 'Juan Domiciliario' },
+            { id: 4, username: 'pedro', password: '123', role: 'domiciliario', name: 'Pedro Pérez' }
+        ],
+        clients: [
+            { 
+                id: 1, 
+                nombre: 'Carlos López', 
+                telefono: '3001234567', 
+                direccion: 'Calle 123 #45-67', 
+                barrio: 'El Poblado',
+                referencia: 'Casa verde, portón blanco'
+            },
+            { 
+                id: 2, 
+                nombre: 'Ana Martínez', 
+                telefono: '3109876543', 
+                direccion: 'Carrera 50 #23-12', 
+                barrio: 'Laureles',
+                referencia: 'Edificio azul, apto 301'
+            }
+        ],
+        routes: [
+            {
+                id: 1,
+                domiciliarioId: 3,
+                domiciliarioNombre: 'Juan Domiciliario',
+                clienteId: 1,
+                telefono: '3001234567',
+                direccion: 'Calle 123 #45-67',
+                barrio: 'El Poblado',
+                referencia: 'Casa verde, portón blanco',
+                cantidadTortas: 3,
+                metodoPago: 'Efectivo',
+                total: 45000,
+                estado: 'pendiente',
+                fechaCreacion: obtenerFechaHoraLocal(),
+                fechaInicio: null,
+                fechaEntrega: null
+            }
+        ]
+    };
+
+    // Función para obtener fecha y hora local del dispositivo
+    function obtenerFechaHoraLocal() {
+        const ahora = new Date();
+        const year = ahora.getFullYear();
+        const month = String(ahora.getMonth() + 1).padStart(2, '0');
+        const day = String(ahora.getDate()).padStart(2, '0');
+        const hours = String(ahora.getHours()).padStart(2, '0');
+        const minutes = String(ahora.getMinutes()).padStart(2, '0');
+        const seconds = String(ahora.getSeconds()).padStart(2, '0');
+        
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+
+    // Inicializar localStorage
+    if (!localStorage.getItem('pezPostreUsers')) {
+        localStorage.setItem('pezPostreUsers', JSON.stringify(initialData.users));
+    }
+    if (!localStorage.getItem('pezPostreClients')) {
+        localStorage.setItem('pezPostreClients', JSON.stringify(initialData.clients));
+    }
+    if (!localStorage.getItem('pezPostreRoutes')) {
+        localStorage.setItem('pezPostreRoutes', JSON.stringify(initialData.routes));
+    }
+
+    // Variables globales
+    let currentUser = null;
+    let currentRole = null;
+
+    // Event Listeners
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        login();
+    });
+
+    document.getElementById('crearUsuarioForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        crearUsuario();
+    });
+
+    document.getElementById('crearRutaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        guardarRuta();
+    });
+
+    document.getElementById('crearClienteForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        guardarCliente();
+    });
+
+    // Autocompletado de clientes
+    document.getElementById('clienteBusqueda').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        if (searchTerm.length >= 2) {
+            buscarClientes(searchTerm);
+        } else {
+            document.getElementById('autocomplete-suggestions').classList.add('hidden');
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.autocomplete-container')) {
+            document.getElementById('autocomplete-suggestions').classList.add('hidden');
+        }
+    });
+
+    function buscarClientes(searchTerm) {
+        const clients = JSON.parse(localStorage.getItem('pezPostreClients'));
+        const matches = clients.filter(client => 
+            client.nombre.toLowerCase().includes(searchTerm) ||
+            client.telefono.includes(searchTerm)
+        ).slice(0, 5);
+
+        const suggestionsContainer = document.getElementById('autocomplete-suggestions');
+        suggestionsContainer.innerHTML = '';
+        
+        if (matches.length > 0) {
+            matches.forEach(client => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.innerHTML = `
+                    <strong>${client.nombre}</strong><br>
+                    <small>📞 ${client.telefono} | 📍 ${client.barrio || 'Sin barrio'}</small>
+                `;
+                item.onclick = () => seleccionarCliente(client);
+                suggestionsContainer.appendChild(item);
+            });
+            suggestionsContainer.classList.remove('hidden');
+        } else {
+            suggestionsContainer.innerHTML = '<div class="autocomplete-item">No se encontraron clientes. Puede crear uno nuevo.</div>';
+            suggestionsContainer.classList.remove('hidden');
+        }
+    }
+
+    function seleccionarCliente(client) {
+        document.getElementById('clienteBusqueda').value = client.nombre;
+        document.getElementById('clienteSeleccionadoId').value = client.id;
+        document.getElementById('telefonoCliente').value = client.telefono;
+        document.getElementById('direccionCliente').value = client.direccion;
+        document.getElementById('puntoReferencia').value = client.referencia || '';
+        document.getElementById('barrioCliente').value = client.barrio || '';
+        
+        document.getElementById('autocomplete-suggestions').classList.add('hidden');
+    }
+
+    // Funciones de Autenticación
+    function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        const users = JSON.parse(localStorage.getItem('pezPostreUsers'));
+        const user = users.find(u => u.username === username && u.password === password);
+
+        if (user) {
+            currentUser = user;
+            currentRole = user.role;
+            
+            // Aplicar tema según rol
+            document.body.className = '';
+            document.body.classList.add(`${currentRole}-theme`);
+            
+            Swal.fire({
+                icon: 'success',
+                title: '¡Bienvenido!',
+                text: `Has iniciado sesión como ${user.name}`,
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                
+                cargarSidebar();
+                cargarDomiciliarios();
+                cargarRutas();
+                configurarVisibilidadFiltros();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Credenciales incorrectas'
+            });
+        }
+    }
+
+    function cerrarSesion() {
+        Swal.fire({
+            title: '¿Cerrar sesión?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, salir',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#6f4e37'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                currentUser = null;
+                currentRole = null;
+                document.body.className = '';
+                document.getElementById('loginSection').classList.remove('hidden');
+                document.getElementById('dashboardSection').classList.add('hidden');
+                document.getElementById('loginForm').reset();
+                ocultarTodasLasSecciones();
+            }
+        });
+    }
+
+    function cargarSidebar() {
+        const sidebarContainer = document.getElementById('sidebar-container');
+        let sidebarHtml = '';
+        
+        if (currentRole === 'admin') {
+            sidebarHtml = `
+                <div class="sidebar admin-sidebar">
+                    <div class="welcome-message admin-welcome">
+                        <h5 class="mb-2">
+                            <i class="fas fa-user-circle"></i> ${currentUser.name}
+                        </h5>
+                        <span class="badge bg-success">Administrador</span>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-cog"></i> Panel de Control</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success text-start" onclick="mostrarCrearUsuario()">
+                            <i class="fas fa-user-plus"></i> Crear Usuario
+                        </button>
+                        <button class="btn btn-success text-start" onclick="mostrarCrearRuta()">
+                            <i class="fas fa-route"></i> Asignar Ruta
+                        </button>
+                        <button class="btn btn-success text-start" onclick="mostrarGestionUsuarios()">
+                            <i class="fas fa-users-cog"></i> Gestionar Usuarios
+                        </button>
+                        <button class="btn btn-success text-start" onclick="mostrarGestionClientes()">
+                            <i class="fas fa-user-tie"></i> Gestionar Clientes
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else if (currentRole === 'despachador') {
+            sidebarHtml = `
+                <div class="sidebar despachador-sidebar">
+                    <div class="welcome-message despachador-welcome">
+                        <h5 class="mb-2">
+                            <i class="fas fa-user-circle"></i> ${currentUser.name}
+                        </h5>
+                        <span class="badge bg-info">Despachador</span>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-truck"></i> Panel de Despacho</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-info text-start text-white" onclick="cargarRutas()">
+                            <i class="fas fa-list"></i> Ver Rutas
+                        </button>
+                    </div>
+                    <div class="mt-3 p-2 bg-white bg-opacity-50 rounded">
+                        <small><i class="fas fa-info-circle"></i> Solo tú puedes iniciar las rutas</small>
+                    </div>
+                </div>
+            `;
+        } else if (currentRole === 'domiciliario') {
+            sidebarHtml = `
+                <div class="sidebar domiciliario-sidebar">
+                    <div class="welcome-message domiciliario-welcome">
+                        <h5 class="mb-2">
+                            <i class="fas fa-user-circle"></i> ${currentUser.name}
+                        </h5>
+                        <span class="badge bg-danger">Domiciliario</span>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-motorcycle"></i> Mi Panel</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-danger text-start text-white" onclick="cargarRutas()">
+                            <i class="fas fa-route"></i> Mis Rutas
+                        </button>
+                    </div>
+                    <div class="mt-3 p-2 bg-white bg-opacity-50 rounded">
+                        <small><i class="fas fa-info-circle"></i> Solo tú puedes finalizar las rutas</small>
+                    </div>
+                </div>
+            `;
+        }
+        
+        sidebarContainer.innerHTML = sidebarHtml;
+    }
+
+    function configurarVisibilidadFiltros() {
+        const filtrosSection = document.getElementById('filtrosSection');
+        if (currentRole === 'admin' || currentRole === 'despachador') {
+            filtrosSection.classList.remove('hidden');
+            cargarDomiciliariosEnFiltro();
+        } else {
+            filtrosSection.classList.add('hidden');
+        }
+    }
+
+    // Funciones de Usuarios
+    function mostrarCrearUsuario() {
+        ocultarTodasLasSecciones();
+        document.getElementById('crearUsuarioSection').classList.remove('hidden');
+    }
+
+    function ocultarCrearUsuario() {
+        document.getElementById('crearUsuarioSection').classList.add('hidden');
+        document.getElementById('crearUsuarioForm').reset();
+    }
+
+    function crearUsuario() {
+        const name = document.getElementById('newUserName').value;
+        const username = document.getElementById('newUserUsername').value;
+        const password = document.getElementById('newUserPass').value;
+        const role = document.getElementById('newUserRole').value;
+
+        const users = JSON.parse(localStorage.getItem('pezPostreUsers'));
+        
+        if (users.find(u => u.username === username)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El nombre de usuario ya existe'
+            });
+            return;
+        }
+        
+        const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+        
+        const newUser = {
+            id: newId,
+            username: username,
+            password: password,
+            role: role,
+            name: name
+        };
+
+        users.push(newUser);
+        localStorage.setItem('pezPostreUsers', JSON.stringify(users));
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Usuario creado',
+            timer: 1500,
+            showConfirmButton: false
+        });
+
+        ocultarCrearUsuario();
+        cargarDomiciliariosEnFiltro();
+    }
+
+    function mostrarGestionUsuarios() {
+        ocultarTodasLasSecciones();
+        document.getElementById('gestionUsuariosSection').classList.remove('hidden');
+        cargarTablaUsuarios();
+    }
+
+    function ocultarGestionUsuarios() {
+        document.getElementById('gestionUsuariosSection').classList.add('hidden');
+    }
+
+    function cargarTablaUsuarios() {
+        const users = JSON.parse(localStorage.getItem('pezPostreUsers'));
+        const tbody = document.getElementById('usuariosTableBody');
+        tbody.innerHTML = '';
+        
+        users.forEach(user => {
+            if (user.id !== currentUser.id) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.username}</td>
+                    <td><span class="badge bg-secondary">${user.role}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-warning" onclick="editarUsuario(${user.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarUsuario(${user.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        });
+    }
+
+    function editarUsuario(userId) {
+        const users = JSON.parse(localStorage.getItem('pezPostreUsers'));
+        const user = users.find(u => u.id === userId);
+        
+        if (user) {
+            Swal.fire({
+                title: 'Editar Usuario',
+                html: `
+                    <input id="swal-edit-name" class="swal2-input" placeholder="Nombre" value="${user.name}">
+                    <input id="swal-edit-username" class="swal2-input" placeholder="Usuario" value="${user.username}">
+                    <input id="swal-edit-pass" class="swal2-input" placeholder="Nueva contraseña (dejar vacío para no cambiar)">
+                    <select id="swal-edit-role" class="swal2-input">
+                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrador</option>
+                        <option value="despachador" ${user.role === 'despachador' ? 'selected' : ''}>Despachador</option>
+                        <option value="domiciliario" ${user.role === 'domiciliario' ? 'selected' : ''}>Domiciliario</option>
+                    </select>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Actualizar',
+                confirmButtonColor: '#6f4e37',
+                preConfirm: () => {
+                    const name = document.getElementById('swal-edit-name').value;
+                    const username = document.getElementById('swal-edit-username').value;
+                    const password = document.getElementById('swal-edit-pass').value;
+                    const role = document.getElementById('swal-edit-role').value;
+                    
+                    if (!name || !username || !role) {
+                        Swal.showValidationMessage('Por favor complete todos los campos requeridos');
+                        return false;
+                    }
+                    
+                    return { name, username, password, role };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const users = JSON.parse(localStorage.getItem('pezPostreUsers'));
+                    const userIndex = users.findIndex(u => u.id === userId);
+                    
+                    users[userIndex].name = result.value.name;
+                    users[userIndex].username = result.value.username;
+                    if (result.value.password) {
+                        users[userIndex].password = result.value.password;
+                    }
+                    users[userIndex].role = result.value.role;
+                    
+                    localStorage.setItem('pezPostreUsers', JSON.stringify(users));
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Usuario actualizado',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    cargarTablaUsuarios();
+                    cargarDomiciliariosEnFiltro();
+                }
+            });
+        }
+    }
+
+    function eliminarUsuario(userId) {
+        Swal.fire({
+            title: '¿Eliminar usuario?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let users = JSON.parse(localStorage.getItem('pezPostreUsers'));
+                users = users.filter(u => u.id !== userId);
+                localStorage.setItem('pezPostreUsers', JSON.stringify(users));
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Usuario eliminado',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                cargarTablaUsuarios();
+                cargarDomiciliariosEnFiltro();
+            }
+        });
+    }
+
+    // Funciones de Clientes
+    function mostrarGestionClientes() {
+        ocultarTodasLasSecciones();
+        document.getElementById('gestionClientesSection').classList.remove('hidden');
+        cargarTablaClientes();
+    }
+
+    function ocultarGestionClientes() {
+        document.getElementById('gestionClientesSection').classList.add('hidden');
+    }
+
+    function mostrarCrearCliente() {
+        document.getElementById('clienteFormTitle').textContent = 'Nuevo Cliente';
+        document.getElementById('editingClienteId').value = '';
+        document.getElementById('crearClienteForm').reset();
+        document.getElementById('crearClienteSection').classList.remove('hidden');
+    }
+
+    function ocultarCrearCliente() {
+        document.getElementById('crearClienteSection').classList.add('hidden');
+        document.getElementById('crearClienteForm').reset();
+    }
+
+    function guardarCliente() {
+        const clienteId = document.getElementById('editingClienteId').value;
+        const nombre = document.getElementById('clienteNombre').value;
+        const telefono = document.getElementById('clienteTelefono').value;
+        const direccion = document.getElementById('clienteDireccion').value;
+        const barrio = document.getElementById('clienteBarrio').value;
+        const referencia = document.getElementById('clienteReferencia').value;
+        
+        const clients = JSON.parse(localStorage.getItem('pezPostreClients'));
+        
+        if (clienteId) {
+            const index = clients.findIndex(c => c.id === parseInt(clienteId));
+            clients[index] = { ...clients[index], nombre, telefono, direccion, barrio, referencia };
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Cliente actualizado',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } else {
+            const newId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 1;
+            clients.push({ id: newId, nombre, telefono, direccion, barrio, referencia });
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Cliente creado',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+        
+        localStorage.setItem('pezPostreClients', JSON.stringify(clients));
+        ocultarCrearCliente();
+        cargarTablaClientes();
+    }
+
+    function cargarTablaClientes() {
+        const clients = JSON.parse(localStorage.getItem('pezPostreClients'));
+        const tbody = document.getElementById('clientesTableBody');
+        tbody.innerHTML = '';
+        
+        clients.forEach(client => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${client.id}</td>
+                <td>${client.nombre}</td>
+                <td>${client.telefono}</td>
+                <td>${client.direccion}</td>
+                <td>${client.barrio || '-'}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-warning" onclick="editarCliente(${client.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarCliente(${client.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function editarCliente(clienteId) {
+        const clients = JSON.parse(localStorage.getItem('pezPostreClients'));
+        const client = clients.find(c => c.id === clienteId);
+        
+        if (client) {
+            document.getElementById('clienteFormTitle').textContent = 'Editar Cliente';
+            document.getElementById('editingClienteId').value = client.id;
+            document.getElementById('clienteNombre').value = client.nombre;
+            document.getElementById('clienteTelefono').value = client.telefono;
+            document.getElementById('clienteDireccion').value = client.direccion;
+            document.getElementById('clienteBarrio').value = client.barrio || '';
+            document.getElementById('clienteReferencia').value = client.referencia || '';
+            
+            ocultarTodasLasSecciones();
+            document.getElementById('crearClienteSection').classList.remove('hidden');
+        }
+    }
+
+    function eliminarCliente(clienteId) {
+        Swal.fire({
+            title: '¿Eliminar cliente?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let clients = JSON.parse(localStorage.getItem('pezPostreClients'));
+                clients = clients.filter(c => c.id !== clienteId);
+                localStorage.setItem('pezPostreClients', JSON.stringify(clients));
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Cliente eliminado',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                cargarTablaClientes();
+            }
+        });
+    }
+
+    // Funciones de Rutas
+    function mostrarCrearRuta() {
+        ocultarTodasLasSecciones();
+        document.getElementById('rutaFormTitle').textContent = 'Asignar Nueva Ruta';
+        document.getElementById('editingRouteId').value = '';
+        document.getElementById('crearRutaForm').reset();
+        document.getElementById('clienteBusqueda').value = '';
+        document.getElementById('clienteSeleccionadoId').value = '';
+        document.getElementById('crearRutaSection').classList.remove('hidden');
+        cargarDomiciliariosEnSelect();
+    }
+
+    function ocultarCrearRuta() {
+        document.getElementById('crearRutaSection').classList.add('hidden');
+        document.getElementById('crearRutaForm').reset();
+    }
+
+    function cargarDomiciliariosEnFiltro() {
+        const users = JSON.parse(localStorage.getItem('pezPostreUsers'));
+        const domiciliarios = users.filter(u => u.role === 'domiciliario');
+        
+        const filterSelect = document.getElementById('filterDomiciliario');
+        filterSelect.innerHTML = '<option value="">Todos los domiciliarios</option>';
+        
+        domiciliarios.forEach(d => {
+            const option = document.createElement('option');
+            option.value = d.id;
+            option.textContent = d.name;
+            filterSelect.appendChild(option);
+        });
+    }
+
+    function cargarDomiciliariosEnSelect() {
+        const users = JSON.parse(localStorage.getItem('pezPostreUsers'));
+        const domiciliarios = users.filter(u => u.role === 'domiciliario');
+        
+        const select = document.getElementById('domiciliarioAsignado');
+        select.innerHTML = '<option value="">Seleccionar domiciliario</option>';
+        
+        domiciliarios.forEach(d => {
+            const option = document.createElement('option');
+            option.value = d.id;
+            option.textContent = d.name;
+            select.appendChild(option);
+        });
+    }
+
+    function guardarRuta() {
+        const routeId = document.getElementById('editingRouteId').value;
+        const domiciliarioSelect = document.getElementById('domiciliarioAsignado');
+        const domiciliarioId = parseInt(domiciliarioSelect.value);
+        const domiciliarioNombre = domiciliarioSelect.options[domiciliarioSelect.selectedIndex]?.text || '';
+        
+        const clienteNombre = document.getElementById('clienteBusqueda').value;
+        let clienteId = document.getElementById('clienteSeleccionadoId').value;
+        
+        // Si se ingresó un nombre de cliente y no está seleccionado de la lista, crear uno nuevo
+        if (clienteNombre && !clienteId) {
+            const clients = JSON.parse(localStorage.getItem('pezPostreClients'));
+            const newId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 1;
+            
+            const nuevoCliente = {
+                id: newId,
+                nombre: clienteNombre,
+                telefono: document.getElementById('telefonoCliente').value,
+                direccion: document.getElementById('direccionCliente').value,
+                barrio: document.getElementById('barrioCliente').value,
+                referencia: document.getElementById('puntoReferencia').value
+            };
+            
+            clients.push(nuevoCliente);
+            localStorage.setItem('pezPostreClients', JSON.stringify(clients));
+            clienteId = newId;
+        }
+
+        const routes = JSON.parse(localStorage.getItem('pezPostreRoutes'));
+        
+        const routeData = {
+            domiciliarioId: domiciliarioId,
+            domiciliarioNombre: domiciliarioNombre,
+            clienteId: clienteId ? parseInt(clienteId) : null,
+            telefono: document.getElementById('telefonoCliente').value,
+            direccion: document.getElementById('direccionCliente').value,
+            barrio: document.getElementById('barrioCliente').value,
+            referencia: document.getElementById('puntoReferencia').value,
+            cantidadTortas: parseInt(document.getElementById('cantidadTortas').value),
+            metodoPago: document.getElementById('metodoPago').value,
+            total: parseInt(document.getElementById('totalPagar').value),
+            estado: 'pendiente',
+            fechaCreacion: obtenerFechaHoraLocal(),
+            fechaInicio: null,
+            fechaEntrega: null
+        };
+
+        if (routeId) {
+            const index = routes.findIndex(r => r.id === parseInt(routeId));
+            routes[index] = { ...routes[index], ...routeData };
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Ruta actualizada',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } else {
+            const newId = routes.length > 0 ? Math.max(...routes.map(r => r.id)) + 1 : 1;
+            routes.push({ id: newId, ...routeData });
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Ruta creada',
+                text: 'Ruta asignada exitosamente',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+
+        localStorage.setItem('pezPostreRoutes', JSON.stringify(routes));
+        ocultarCrearRuta();
+        cargarRutas();
+    }
+
+    function editarRuta(routeId) {
+        const routes = JSON.parse(localStorage.getItem('pezPostreRoutes'));
+        const route = routes.find(r => r.id === routeId);
+        
+        if (route && currentRole === 'admin') {
+            document.getElementById('rutaFormTitle').textContent = 'Editar Ruta';
+            document.getElementById('editingRouteId').value = route.id;
+            
+            cargarDomiciliariosEnSelect();
+            setTimeout(() => {
+                document.getElementById('domiciliarioAsignado').value = route.domiciliarioId;
+            }, 100);
+            
+            document.getElementById('clienteBusqueda').value = '';
+            document.getElementById('clienteSeleccionadoId').value = route.clienteId || '';
+            
+            if (route.clienteId) {
+                const clients = JSON.parse(localStorage.getItem('pezPostreClients'));
+                const client = clients.find(c => c.id === route.clienteId);
+                if (client) {
+                    document.getElementById('clienteBusqueda').value = client.nombre;
+                }
+            }
+            
+            document.getElementById('telefonoCliente').value = route.telefono;
+            document.getElementById('direccionCliente').value = route.direccion;
+            document.getElementById('barrioCliente').value = route.barrio || '';
+            document.getElementById('puntoReferencia').value = route.referencia || '';
+            document.getElementById('cantidadTortas').value = route.cantidadTortas;
+            document.getElementById('metodoPago').value = route.metodoPago;
+            document.getElementById('totalPagar').value = route.total;
+            
+            ocultarTodasLasSecciones();
+            document.getElementById('crearRutaSection').classList.remove('hidden');
+        }
+    }
+
+    function eliminarRuta(routeId) {
+        Swal.fire({
+            title: '¿Eliminar ruta?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let routes = JSON.parse(localStorage.getItem('pezPostreRoutes'));
+                routes = routes.filter(r => r.id !== routeId);
+                localStorage.setItem('pezPostreRoutes', JSON.stringify(routes));
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Ruta eliminada',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                cargarRutas();
+            }
+        });
+    }
+
+    function cambiarEstado(routeId, nuevoEstado) {
+        if (nuevoEstado === 'enruta' && currentRole !== 'despachador') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Acceso denegado',
+                text: 'Solo el despachador puede iniciar rutas',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+        
+        if (nuevoEstado === 'entregado' && currentRole !== 'domiciliario') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Acceso denegado',
+                text: 'Solo el domiciliario puede finalizar rutas',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        let titulo = '';
+        let mensaje = '';
+        
+        if (nuevoEstado === 'enruta') {
+            titulo = '¿Iniciar ruta?';
+            mensaje = 'El despachador está iniciando esta ruta';
+        } else if (nuevoEstado === 'entregado') {
+            titulo = '¿Confirmar entrega?';
+            mensaje = 'El domiciliario está marcando el pedido como entregado';
+        }
+        
+        Swal.fire({
+            title: titulo,
+            text: mensaje,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, continuar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#6f4e37'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const routes = JSON.parse(localStorage.getItem('pezPostreRoutes'));
+                const routeIndex = routes.findIndex(r => r.id === routeId);
+                
+                if (routeIndex !== -1) {
+                    routes[routeIndex].estado = nuevoEstado;
+                    
+                    if (nuevoEstado === 'enruta') {
+                        routes[routeIndex].fechaInicio = obtenerFechaHoraLocal();
+                    } else if (nuevoEstado === 'entregado') {
+                        routes[routeIndex].fechaEntrega = obtenerFechaHoraLocal();
+                    }
+                    
+                    localStorage.setItem('pezPostreRoutes', JSON.stringify(routes));
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Estado actualizado',
+                        text: `La ruta ha sido marcada como ${nuevoEstado === 'enruta' ? 'En Ruta' : 'Entregada'}`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    cargarRutas();
+                }
+            }
+        });
+    }
+
+    function aplicarFiltros() {
+        cargarRutas();
+    }
+
+    function cargarRutas() {
+        const routes = JSON.parse(localStorage.getItem('pezPostreRoutes'));
+        let filteredRoutes = routes;
+        
+        // Filtrar por domiciliario (solo admin y despachador pueden ver todos)
+        if (currentRole === 'domiciliario') {
+            filteredRoutes = routes.filter(r => r.domiciliarioId === currentUser.id);
+        } else {
+            const filterDomiciliario = document.getElementById('filterDomiciliario').value;
+            if (filterDomiciliario) {
+                filteredRoutes = filteredRoutes.filter(r => r.domiciliarioId === parseInt(filterDomiciliario));
+            }
+            
+            const filterEstado = document.getElementById('filterEstado').value;
+            if (filterEstado) {
+                filteredRoutes = filteredRoutes.filter(r => r.estado === filterEstado);
+            }
+        }
+        
+        // Ordenar por fecha de creación (más reciente primero)
+        filteredRoutes.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+
+        const container = document.getElementById('rutasContainer');
+        container.innerHTML = '';
+
+        if (filteredRoutes.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-route"></i>
+                    <h5>No hay rutas disponibles</h5>
+                    <p class="text-muted">Las rutas asignadas aparecerán aquí</p>
+                </div>
+            `;
+            return;
+        }
+
+        filteredRoutes.forEach(route => {
+            const routeCard = document.createElement('div');
+            routeCard.className = 'card route-card p-3 mb-3';
+            
+            let estadoClass = 'status-pendiente';
+            let estadoText = 'Pendiente';
+            
+            if (route.estado === 'enruta') {
+                estadoClass = 'status-enruta';
+                estadoText = 'En Ruta';
+            }
+            if (route.estado === 'entregado') {
+                estadoClass = 'status-entregado';
+                estadoText = 'Entregado';
+            }
+            
+            let acciones = '';
+            
+            if (currentRole === 'admin') {
+                acciones += `
+                    <button class="btn btn-sm btn-warning" onclick="editarRuta(${route.id})">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="eliminarRuta(${route.id})">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                `;
+            }
+            
+            if (currentRole === 'despachador' && route.estado === 'pendiente') {
+                acciones += `<button class="btn btn-sm btn-info text-white" onclick="cambiarEstado(${route.id}, 'enruta')">
+                                <i class="fas fa-truck"></i> Iniciar Ruta
+                            </button>`;
+            }
+            
+            if (currentRole === 'domiciliario' && route.estado === 'enruta' && route.domiciliarioId === currentUser.id) {
+                acciones += `<button class="btn btn-sm btn-success" onclick="cambiarEstado(${route.id}, 'entregado')">
+                                <i class="fas fa-check"></i> Marcar Entregado
+                            </button>`;
+            }
+            
+            routeCard.innerHTML = `
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start mb-2">
+                            <h6 class="mb-2">
+                                <i class="fas fa-user"></i> Domiciliario: ${route.domiciliarioNombre}
+                            </h6>
+                            <span class="status-badge ${estadoClass} mb-2">${estadoText}</span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-6 mb-2">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-phone"></i> Teléfono:
+                                </small>
+                                <span>${route.telefono}</span>
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-map-marker-alt"></i> Dirección:
+                                </small>
+                                <span>${route.direccion}</span>
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-birthday-cake"></i> Cantidad:
+                                </small>
+                                <span>${route.cantidadTortas} torta(s)</span>
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-credit-card"></i> Pago:
+                                </small>
+                                <span>${route.metodoPago} - $${route.total.toLocaleString()}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline mt-2">
+                            <div class="timeline-item">
+                                <small class="d-block text-muted">📅 Creado:</small>
+                                <small>${route.fechaCreacion}</small>
+                            </div>
+                            ${route.fechaInicio ? `
+                            <div class="timeline-item">
+                                <small class="d-block text-muted">🚚 Iniciado:</small>
+                                <small>${route.fechaInicio}</small>
+                            </div>
+                            ` : ''}
+                            ${route.fechaEntrega ? `
+                            <div class="timeline-item">
+                                <small class="d-block text-muted">✅ Entregado:</small>
+                                <small>${route.fechaEntrega}</small>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="col-md-4 mt-3 mt-md-0">
+                        <div class="action-buttons justify-content-md-end">
+                            ${acciones}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(routeCard);
+        });
+    }
+
+    function mostrarDashboard() {
+        ocultarTodasLasSecciones();
+        document.getElementById('gestionRutasSection').classList.remove('hidden');
+        cargarRutas();
+    }
+
+    function ocultarTodasLasSecciones() {
+        document.getElementById('crearUsuarioSection').classList.add('hidden');
+        document.getElementById('crearRutaSection').classList.add('hidden');
+        document.getElementById('gestionUsuariosSection').classList.add('hidden');
+        document.getElementById('gestionClientesSection').classList.add('hidden');
+        document.getElementById('crearClienteSection').classList.add('hidden');
+        document.getElementById('gestionRutasSection').classList.add('hidden');
+    }
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
