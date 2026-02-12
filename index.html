@@ -233,7 +233,21 @@
             background: white;
             border-radius: 10px;
             padding: 15px;
-            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            height: 100%;
+        }
+        
+        .section-title {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
         }
         
         @media (max-width: 768px) {
@@ -286,6 +300,35 @@
         .empty-state i {
             font-size: 3rem;
             margin-bottom: 15px;
+        }
+        
+        .main-dashboard {
+            background: rgba(255,255,255,0.7);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .quick-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            flex: 1;
+            min-width: 150px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
         }
     </style>
 </head>
@@ -349,13 +392,6 @@
                         <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
                     </button>
                 </form>
-                
-                <div class="mt-4 p-3 bg-light rounded">
-                    <p class="mb-1"><strong>Credenciales de prueba:</strong></p>
-                    <small class="text-muted d-block">👑 Admin: admin / 123</small>
-                    <small class="text-muted d-block">📦 Despachador: despachador / 123</small>
-                    <small class="text-muted d-block">🛵 Domiciliario: domiciliario / 123</small>
-                </div>
             </div>
         </div>
     </div>
@@ -369,240 +405,268 @@
             </div>
             
             <div class="col-lg-9 mb-4">
-                <!-- Sección de Crear Usuario (Admin) -->
-                <div id="crearUsuarioSection" class="card p-4 mb-4 hidden">
-                    <h4 class="mb-3"><i class="fas fa-user-plus"></i> Crear Nuevo Usuario</h4>
-                    <hr>
-                    <form id="crearUsuarioForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nombre Completo</label>
-                                <input type="text" class="form-control" id="newUserName" placeholder="Ej: Juan Pérez" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Usuario</label>
-                                <input type="text" class="form-control" id="newUserUsername" placeholder="Ej: juan123" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Contraseña</label>
-                                <input type="password" class="form-control" id="newUserPass" placeholder="********" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Rol</label>
-                                <select class="form-select" id="newUserRole" required>
-                                    <option value="admin">Administrador</option>
-                                    <option value="despachador">Despachador</option>
-                                    <option value="domiciliario">Domiciliario</option>
-                                </select>
-                            </div>
+                <div class="main-dashboard">
+                    <!-- Panel de Control -->
+                    <h3 class="section-title">
+                        <i class="fas fa-tachometer-alt"></i> Panel de Control
+                    </h3>
+                    
+                    <!-- Stats rápidas (solo admin y despachador) -->
+                    <div id="quickStats" class="quick-stats hidden">
+                        <div class="stat-item">
+                            <small class="text-muted">Rutas Pendientes</small>
+                            <div class="stat-number" id="statsPendientes">0</div>
                         </div>
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-pez">
-                                <i class="fas fa-save"></i> Crear Usuario
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="ocultarCrearUsuario()">
-                                <i class="fas fa-times"></i> Cancelar
-                            </button>
+                        <div class="stat-item">
+                            <small class="text-muted">En Ruta</small>
+                            <div class="stat-number" id="statsEnRuta">0</div>
                         </div>
-                    </form>
-                </div>
-                
-                <!-- Sección de Crear/Editar Ruta -->
-                <div id="crearRutaSection" class="card p-4 mb-4 hidden">
-                    <h4 class="mb-3"><i class="fas fa-route"></i> <span id="rutaFormTitle">Asignar Nueva Ruta</span></h4>
-                    <hr>
-                    <form id="crearRutaForm">
-                        <input type="hidden" id="editingRouteId">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Domiciliario</label>
-                                <select class="form-select" id="domiciliarioAsignado" required>
-                                    <option value="">Seleccionar domiciliario</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Cliente</label>
-                                <div class="autocomplete-container">
-                                    <input type="text" class="form-control" id="clienteBusqueda" placeholder="Escriba nombre del cliente" autocomplete="off">
-                                    <input type="hidden" id="clienteSeleccionadoId">
-                                    <div id="autocomplete-suggestions" class="autocomplete-suggestions hidden"></div>
-                                </div>
-                                <small class="text-muted">Escriba para buscar o ingrese un cliente nuevo</small>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Teléfono Cliente</label>
-                                <input type="text" class="form-control" id="telefonoCliente" placeholder="Ej: 3001234567" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Dirección Cliente</label>
-                                <input type="text" class="form-control" id="direccionCliente" placeholder="Ej: Calle 123 #45-67" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Punto de Referencia</label>
-                                <input type="text" class="form-control" id="puntoReferencia" placeholder="Ej: Casa verde, portón blanco">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Barrio</label>
-                                <input type="text" class="form-control" id="barrioCliente" placeholder="Ej: El Poblado">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Cantidad de Tortas</label>
-                                <input type="number" class="form-control" id="cantidadTortas" min="1" placeholder="Ej: 2" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Método de Pago</label>
-                                <select class="form-select" id="metodoPago" required>
-                                    <option value="Efectivo">Efectivo</option>
-                                    <option value="Transferencia">Transferencia</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Total a Pagar</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="totalPagar" min="0" step="1000" placeholder="45000" required>
-                                </div>
-                            </div>
+                        <div class="stat-item">
+                            <small class="text-muted">Entregadas Hoy</small>
+                            <div class="stat-number" id="statsEntregadas">0</div>
                         </div>
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-pez">
-                                <i class="fas fa-save"></i> Guardar Ruta
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="ocultarCrearRuta()">
-                                <i class="fas fa-times"></i> Cancelar
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                
-                <!-- Sección de Gestión de Usuarios -->
-                <div id="gestionUsuariosSection" class="card p-4 mb-4 hidden">
-                    <h4 class="mb-3"><i class="fas fa-users-cog"></i> Gestión de Usuarios</h4>
-                    <hr>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nombre</th>
-                                    <th>Usuario</th>
-                                    <th>Rol</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usuariosTableBody">
-                            </tbody>
-                        </table>
                     </div>
-                    <button class="btn btn-pez mt-3" onclick="ocultarGestionUsuarios()">
-                        <i class="fas fa-arrow-left"></i> Volver
-                    </button>
-                </div>
-                
-                <!-- Sección de Gestión de Clientes -->
-                <div id="gestionClientesSection" class="card p-4 mb-4 hidden">
-                    <h4 class="mb-3"><i class="fas fa-user-tie"></i> Gestión de Clientes</h4>
-                    <hr>
-                    <div class="mb-3">
-                        <button class="btn btn-pez" onclick="mostrarCrearCliente()">
-                            <i class="fas fa-user-plus"></i> Nuevo Cliente
+                    
+                    <!-- Sección de Crear Usuario (Admin) -->
+                    <div id="crearUsuarioSection" class="card p-4 mb-4 hidden">
+                        <h4 class="mb-3"><i class="fas fa-user-plus"></i> Crear Nuevo Usuario</h4>
+                        <hr>
+                        <form id="crearUsuarioForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nombre Completo</label>
+                                    <input type="text" class="form-control" id="newUserName" placeholder="Ej: Juan Pérez" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Usuario</label>
+                                    <input type="text" class="form-control" id="newUserUsername" placeholder="Ej: juan123" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Contraseña</label>
+                                    <input type="password" class="form-control" id="newUserPass" placeholder="********" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Rol</label>
+                                    <select class="form-select" id="newUserRole" required>
+                                        <option value="admin">Administrador</option>
+                                        <option value="despachador">Despachador</option>
+                                        <option value="domiciliario">Domiciliario</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-pez">
+                                    <i class="fas fa-save"></i> Crear Usuario
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="ocultarCrearUsuario()">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Sección de Crear/Editar Ruta -->
+                    <div id="crearRutaSection" class="card p-4 mb-4 hidden">
+                        <h4 class="mb-3"><i class="fas fa-route"></i> <span id="rutaFormTitle">Asignar Nueva Ruta</span></h4>
+                        <hr>
+                        <form id="crearRutaForm">
+                            <input type="hidden" id="editingRouteId">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Domiciliario</label>
+                                    <select class="form-select" id="domiciliarioAsignado" required>
+                                        <option value="">Seleccionar domiciliario</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Cliente</label>
+                                    <div class="autocomplete-container">
+                                        <input type="text" class="form-control" id="clienteBusqueda" placeholder="Escriba nombre del cliente" autocomplete="off">
+                                        <input type="hidden" id="clienteSeleccionadoId">
+                                        <div id="autocomplete-suggestions" class="autocomplete-suggestions hidden"></div>
+                                    </div>
+                                    <small class="text-muted">Escriba para buscar o ingrese un cliente nuevo</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Teléfono Cliente</label>
+                                    <input type="text" class="form-control" id="telefonoCliente" placeholder="Ej: 3001234567" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Dirección Cliente</label>
+                                    <input type="text" class="form-control" id="direccionCliente" placeholder="Ej: Calle 123 #45-67" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Punto de Referencia</label>
+                                    <input type="text" class="form-control" id="puntoReferencia" placeholder="Ej: Casa verde, portón blanco">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Barrio</label>
+                                    <input type="text" class="form-control" id="barrioCliente" placeholder="Ej: El Poblado">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Cantidad de Tortas</label>
+                                    <input type="number" class="form-control" id="cantidadTortas" min="1" placeholder="Ej: 2" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Método de Pago</label>
+                                    <select class="form-select" id="metodoPago" required>
+                                        <option value="Efectivo">Efectivo</option>
+                                        <option value="Transferencia">Transferencia</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Total a Pagar</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="totalPagar" min="0" step="1000" placeholder="45000" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-pez">
+                                    <i class="fas fa-save"></i> Guardar Ruta
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="ocultarCrearRuta()">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Sección de Gestión de Usuarios -->
+                    <div id="gestionUsuariosSection" class="card p-4 mb-4 hidden">
+                        <h4 class="mb-3"><i class="fas fa-users-cog"></i> Gestión de Usuarios</h4>
+                        <hr>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Usuario</th>
+                                        <th>Rol</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usuariosTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <button class="btn btn-pez mt-3" onclick="ocultarGestionUsuarios()">
+                            <i class="fas fa-arrow-left"></i> Volver al Panel
                         </button>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nombre</th>
-                                    <th>Teléfono</th>
-                                    <th>Dirección</th>
-                                    <th>Barrio</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="clientesTableBody">
-                            </tbody>
-                        </table>
-                    </div>
-                    <button class="btn btn-pez mt-3" onclick="ocultarGestionClientes()">
-                        <i class="fas fa-arrow-left"></i> Volver
-                    </button>
-                </div>
-                
-                <!-- Sección de Crear/Editar Cliente -->
-                <div id="crearClienteSection" class="card p-4 mb-4 hidden">
-                    <h4 class="mb-3"><i class="fas fa-user-plus"></i> <span id="clienteFormTitle">Nuevo Cliente</span></h4>
-                    <hr>
-                    <form id="crearClienteForm">
-                        <input type="hidden" id="editingClienteId">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nombre Completo</label>
-                                <input type="text" class="form-control" id="clienteNombre" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Teléfono</label>
-                                <input type="text" class="form-control" id="clienteTelefono" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Dirección</label>
-                                <input type="text" class="form-control" id="clienteDireccion" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Barrio</label>
-                                <input type="text" class="form-control" id="clienteBarrio">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Punto de Referencia</label>
-                                <input type="text" class="form-control" id="clienteReferencia">
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-pez">
-                                <i class="fas fa-save"></i> Guardar Cliente
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="ocultarCrearCliente()">
-                                <i class="fas fa-times"></i> Cancelar
+                    
+                    <!-- Sección de Gestión de Clientes -->
+                    <div id="gestionClientesSection" class="card p-4 mb-4 hidden">
+                        <h4 class="mb-3"><i class="fas fa-user-tie"></i> Gestión de Clientes</h4>
+                        <hr>
+                        <div class="mb-3">
+                            <button class="btn btn-pez" onclick="mostrarCrearCliente()">
+                                <i class="fas fa-user-plus"></i> Nuevo Cliente
                             </button>
                         </div>
-                    </form>
-                </div>
-                
-                <!-- Sección de Gestión de Rutas -->
-                <div id="gestionRutasSection" class="card p-4">
-                    <h4 class="mb-3">
-                        <i class="fas fa-route"></i> 
-                        <span id="rutasTitle">Gestión de Rutas</span>
-                    </h4>
-                    <hr>
-                    
-                    <!-- Filtros solo visibles para Admin y Despachador -->
-                    <div id="filtrosSection" class="filter-section mb-4">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="filterDomiciliario" class="form-label">
-                                    <i class="fas fa-user-tie"></i> Filtrar por Domiciliario:
-                                </label>
-                                <select class="form-select" id="filterDomiciliario" onchange="aplicarFiltros()">
-                                    <option value="">Todos los domiciliarios</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="filterEstado" class="form-label">
-                                    <i class="fas fa-filter"></i> Filtrar por Estado:
-                                </label>
-                                <select class="form-select" id="filterEstado" onchange="aplicarFiltros()">
-                                    <option value="">Todos los estados</option>
-                                    <option value="pendiente">Pendiente</option>
-                                    <option value="enruta">En Ruta</option>
-                                    <option value="entregado">Entregado</option>
-                                </select>
-                            </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Teléfono</th>
+                                        <th>Dirección</th>
+                                        <th>Barrio</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientesTableBody">
+                                </tbody>
+                            </table>
                         </div>
+                        <button class="btn btn-pez mt-3" onclick="ocultarGestionClientes()">
+                            <i class="fas fa-arrow-left"></i> Volver al Panel
+                        </button>
                     </div>
                     
-                    <div id="rutasContainer" class="rutas-container">
-                        <!-- Las rutas se cargarán dinámicamente -->
+                    <!-- Sección de Crear/Editar Cliente -->
+                    <div id="crearClienteSection" class="card p-4 mb-4 hidden">
+                        <h4 class="mb-3"><i class="fas fa-user-plus"></i> <span id="clienteFormTitle">Nuevo Cliente</span></h4>
+                        <hr>
+                        <form id="crearClienteForm">
+                            <input type="hidden" id="editingClienteId">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nombre Completo</label>
+                                    <input type="text" class="form-control" id="clienteNombre" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="text" class="form-control" id="clienteTelefono" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Dirección</label>
+                                    <input type="text" class="form-control" id="clienteDireccion" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Barrio</label>
+                                    <input type="text" class="form-control" id="clienteBarrio">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Punto de Referencia</label>
+                                    <input type="text" class="form-control" id="clienteReferencia">
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-pez">
+                                    <i class="fas fa-save"></i> Guardar Cliente
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="ocultarCrearCliente()">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Gestión de Rutas - DENTRO DEL PANEL DE CONTROL -->
+                    <div id="gestionRutasSection" class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">
+                                <i class="fas fa-route"></i> 
+                                <span id="rutasTitle">Gestión de Rutas</span>
+                            </h4>
+                            <div>
+                                <span class="badge bg-secondary" id="totalRutasBadge">0 rutas</span>
+                            </div>
+                        </div>
+                        <hr>
+                        
+                        <!-- Filtros solo visibles para Admin y Despachador -->
+                        <div id="filtrosSection" class="filter-section">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="filterDomiciliario" class="form-label">
+                                        <i class="fas fa-user-tie"></i> Filtrar por Domiciliario:
+                                    </label>
+                                    <select class="form-select" id="filterDomiciliario" onchange="aplicarFiltros()">
+                                        <option value="">Todos los domiciliarios</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="filterEstado" class="form-label">
+                                        <i class="fas fa-filter"></i> Filtrar por Estado:
+                                    </label>
+                                    <select class="form-select" id="filterEstado" onchange="aplicarFiltros()">
+                                        <option value="">Todos los estados</option>
+                                        <option value="pendiente">Pendiente</option>
+                                        <option value="enruta">En Ruta</option>
+                                        <option value="entregado">Entregado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="rutasContainer" class="rutas-container mt-4">
+                            <!-- Las rutas se cargarán dinámicamente -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -616,8 +680,8 @@
         <div class="row">
             <div class="col-md-4 mb-3 mb-md-0">
                 <h5><i class="fas fa-fish"></i> Pez Postre</h5>
-                <p class="mb-1">La mejor torta de pescado</p>
-                <p class="mb-1"><small>Desde 2025</small></p>
+                <p class="mb-1">Endulzando tus momentos especiales</p>
+                <p class="mb-1"><small>Desde 2020</small></p>
             </div>
             <div class="col-md-4 mb-3 mb-md-0">
                 <h5>Contacto</h5>
@@ -627,12 +691,13 @@
             </div>
             <div class="col-md-4">
                 <h5>Horarios</h5>
-                <p class="mb-1">Lunes a Domingo 8am - 4pm</p>
+                <p class="mb-1">Lunes a Sábado: 8am - 8pm</p>
+                <p class="mb-1">Domingos: 9am - 5pm</p>
             </div>
         </div>
         <hr class="mt-3" style="background-color: rgba(255,255,255,0.1);">
         <div class="text-center">
-            <small>&copy; 2026 Pez Postre - Todos los derechos reservados</small>
+            <small>&copy; 2024 Pez Postre - Todos los derechos reservados</small>
         </div>
     </div>
 </footer>
@@ -816,9 +881,10 @@
                 document.getElementById('dashboardSection').classList.remove('hidden');
                 
                 cargarSidebar();
-                cargarDomiciliarios();
+                cargarDomiciliariosEnFiltro();
                 cargarRutas();
                 configurarVisibilidadFiltros();
+                actualizarStats();
             });
         } else {
             Swal.fire({
@@ -930,11 +996,31 @@
 
     function configurarVisibilidadFiltros() {
         const filtrosSection = document.getElementById('filtrosSection');
+        const quickStats = document.getElementById('quickStats');
+        
         if (currentRole === 'admin' || currentRole === 'despachador') {
             filtrosSection.classList.remove('hidden');
+            quickStats.classList.remove('hidden');
             cargarDomiciliariosEnFiltro();
         } else {
             filtrosSection.classList.add('hidden');
+            quickStats.classList.add('hidden');
+        }
+    }
+
+    function actualizarStats() {
+        if (currentRole === 'admin' || currentRole === 'despachador') {
+            const routes = JSON.parse(localStorage.getItem('pezPostreRoutes'));
+            const hoy = obtenerFechaHoraLocal().split(' ')[0];
+            
+            const pendientes = routes.filter(r => r.estado === 'pendiente').length;
+            const enRuta = routes.filter(r => r.estado === 'enruta').length;
+            const entregadasHoy = routes.filter(r => r.estado === 'entregado' && r.fechaEntrega && r.fechaEntrega.startsWith(hoy)).length;
+            
+            document.getElementById('statsPendientes').textContent = pendientes;
+            document.getElementById('statsEnRuta').textContent = enRuta;
+            document.getElementById('statsEntregadas').textContent = entregadasHoy;
+            document.getElementById('totalRutasBadge').textContent = `${routes.length} rutas totales`;
         }
     }
 
@@ -942,11 +1028,13 @@
     function mostrarCrearUsuario() {
         ocultarTodasLasSecciones();
         document.getElementById('crearUsuarioSection').classList.remove('hidden');
+        document.getElementById('gestionRutasSection').classList.add('hidden');
     }
 
     function ocultarCrearUsuario() {
         document.getElementById('crearUsuarioSection').classList.add('hidden');
         document.getElementById('crearUsuarioForm').reset();
+        document.getElementById('gestionRutasSection').classList.remove('hidden');
     }
 
     function crearUsuario() {
@@ -993,11 +1081,13 @@
     function mostrarGestionUsuarios() {
         ocultarTodasLasSecciones();
         document.getElementById('gestionUsuariosSection').classList.remove('hidden');
+        document.getElementById('gestionRutasSection').classList.add('hidden');
         cargarTablaUsuarios();
     }
 
     function ocultarGestionUsuarios() {
         document.getElementById('gestionUsuariosSection').classList.add('hidden');
+        document.getElementById('gestionRutasSection').classList.remove('hidden');
     }
 
     function cargarTablaUsuarios() {
@@ -1122,11 +1212,13 @@
     function mostrarGestionClientes() {
         ocultarTodasLasSecciones();
         document.getElementById('gestionClientesSection').classList.remove('hidden');
+        document.getElementById('gestionRutasSection').classList.add('hidden');
         cargarTablaClientes();
     }
 
     function ocultarGestionClientes() {
         document.getElementById('gestionClientesSection').classList.add('hidden');
+        document.getElementById('gestionRutasSection').classList.remove('hidden');
     }
 
     function mostrarCrearCliente() {
@@ -1134,11 +1226,13 @@
         document.getElementById('editingClienteId').value = '';
         document.getElementById('crearClienteForm').reset();
         document.getElementById('crearClienteSection').classList.remove('hidden');
+        document.getElementById('gestionClientesSection').classList.add('hidden');
     }
 
     function ocultarCrearCliente() {
         document.getElementById('crearClienteSection').classList.add('hidden');
         document.getElementById('crearClienteForm').reset();
+        document.getElementById('gestionClientesSection').classList.remove('hidden');
     }
 
     function guardarCliente() {
@@ -1221,6 +1315,7 @@
             
             ocultarTodasLasSecciones();
             document.getElementById('crearClienteSection').classList.remove('hidden');
+            document.getElementById('gestionClientesSection').classList.add('hidden');
         }
     }
 
@@ -1260,12 +1355,14 @@
         document.getElementById('clienteBusqueda').value = '';
         document.getElementById('clienteSeleccionadoId').value = '';
         document.getElementById('crearRutaSection').classList.remove('hidden');
+        document.getElementById('gestionRutasSection').classList.add('hidden');
         cargarDomiciliariosEnSelect();
     }
 
     function ocultarCrearRuta() {
         document.getElementById('crearRutaSection').classList.add('hidden');
         document.getElementById('crearRutaForm').reset();
+        document.getElementById('gestionRutasSection').classList.remove('hidden');
     }
 
     function cargarDomiciliariosEnFiltro() {
@@ -1371,6 +1468,7 @@
         localStorage.setItem('pezPostreRoutes', JSON.stringify(routes));
         ocultarCrearRuta();
         cargarRutas();
+        actualizarStats();
     }
 
     function editarRuta(routeId) {
@@ -1407,6 +1505,7 @@
             
             ocultarTodasLasSecciones();
             document.getElementById('crearRutaSection').classList.remove('hidden');
+            document.getElementById('gestionRutasSection').classList.add('hidden');
         }
     }
 
@@ -1433,6 +1532,7 @@
                 });
                 
                 cargarRutas();
+                actualizarStats();
             }
         });
     }
@@ -1504,6 +1604,7 @@
                     });
                     
                     cargarRutas();
+                    actualizarStats();
                 }
             }
         });
@@ -1517,7 +1618,7 @@
         const routes = JSON.parse(localStorage.getItem('pezPostreRoutes'));
         let filteredRoutes = routes;
         
-        // Filtrar por domiciliario (solo admin y despachador pueden ver todos)
+        // Filtrar por rol
         if (currentRole === 'domiciliario') {
             filteredRoutes = routes.filter(r => r.domiciliarioId === currentUser.id);
         } else {
@@ -1662,6 +1763,7 @@
         ocultarTodasLasSecciones();
         document.getElementById('gestionRutasSection').classList.remove('hidden');
         cargarRutas();
+        actualizarStats();
     }
 
     function ocultarTodasLasSecciones() {
@@ -1670,7 +1772,7 @@
         document.getElementById('gestionUsuariosSection').classList.add('hidden');
         document.getElementById('gestionClientesSection').classList.add('hidden');
         document.getElementById('crearClienteSection').classList.add('hidden');
-        document.getElementById('gestionRutasSection').classList.add('hidden');
+        // NO ocultamos gestionRutasSection porque es el panel principal
     }
 </script>
 
