@@ -23,8 +23,12 @@
             --domiciliario-bg: #ffebee;
             --domiciliario-sidebar: #ffcdd2;
             --domiciliario-accent: #e57373;
-            --primary-color: #6f4e37;
-            --secondary-color: #c4a484;
+            --primary-color: #6c757d;
+            --secondary-color: #adb5bd;
+            --light-bg: #f8f9fa;
+            --dark-gray: #495057;
+            --medium-gray: #6c757d;
+            --light-gray: #dee2e6;
         }
         
         * {
@@ -54,7 +58,7 @@
         }
         
         .navbar {
-            background: linear-gradient(135deg, var(--primary-color), #8b5e3c);
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-gray));
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             padding: 0.8rem 1rem;
         }
@@ -62,14 +66,19 @@
         .navbar-brand {
             font-size: 1.2rem;
             font-weight: bold;
+            display: flex;
+            align-items: center;
         }
         
-        .navbar-brand i {
+        .navbar-brand img {
             margin-right: 8px;
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
         }
         
         .footer {
-            background: linear-gradient(135deg, #2c1e14, var(--primary-color));
+            background: linear-gradient(135deg, var(--dark-gray), var(--primary-color));
             color: white;
             padding: 1.5rem 0;
             margin-top: auto;
@@ -98,9 +107,42 @@
         }
         
         .btn-pez:hover {
-            background-color: #5a3e2b;
+            background-color: var(--dark-gray);
             color: white;
             transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background-color: var(--light-gray);
+            border-color: var(--light-gray);
+            color: var(--dark-gray);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--medium-gray);
+            border-color: var(--medium-gray);
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
         }
         
         .login-container {
@@ -133,6 +175,18 @@
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
+        }
+        
+        .status-pagado {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        
+        .status-pendiente-pago {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
         }
         
         .sidebar {
@@ -338,8 +392,8 @@
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container">
         <a class="navbar-brand" href="#">
-            <i class="fas fa-fish"></i>
-            Pez Postre
+            <img src="pezpostre.png" alt="Pez Postre" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+            <span style="display:none;"><i class="fas fa-fish"></i> Pez Postre</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
@@ -369,7 +423,7 @@
             <div class="card p-4">
                 <div class="text-center mb-4">
                     <div class="mb-3">
-                        <i class="fas fa-fish fa-4x" style="color: var(--primary-color);"></i>
+                        <img src="pezpostre.png" alt="Pez Postre" style="width: 80px; height: 80px; object-fit: contain;" onerror="this.style.display='none';this.parentElement.innerHTML+='<i class=\'fas fa-fish fa-4x\' style=\'color: var(--primary-color);\'></i>';">
                     </div>
                     <h2 class="mt-2">Pez Postre</h2>
                     <p class="text-muted">Sistema de Gestión de Rutas</p>
@@ -519,6 +573,23 @@
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
                                         <input type="number" class="form-control" id="totalPagar" min="0" step="1000" placeholder="45000" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Estado de Pago</label>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="estadoPago" id="pagoPagado" value="pagado">
+                                            <label class="form-check-label" for="pagoPagado">
+                                                <span class="status-badge status-pagado">Pagado</span>
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="estadoPago" id="pagoPendiente" value="pendiente" checked>
+                                            <label class="form-check-label" for="pagoPendiente">
+                                                <span class="status-badge status-pendiente-pago">Pendiente de Pago</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -679,7 +750,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-4 mb-3 mb-md-0">
-                <h5><i class="fas fa-fish"></i> Pez Postre</h5>
+                <h5><img src="pezpostre.png" alt="Pez Postre" style="width: 24px; height: 24px; margin-right: 8px; object-fit: contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';"><span style="display:none;"><i class="fas fa-fish"></i> </span>Pez Postre</h5>
                 <p class="mb-1">Endulzando tus momentos especiales</p>
                 <p class="mb-1"><small>Desde 2020</small></p>
             </div>
@@ -743,6 +814,7 @@
                 metodoPago: 'Efectivo',
                 total: 45000,
                 estado: 'pendiente',
+                estadoPago: 'pendiente',
                 fechaCreacion: obtenerFechaHoraLocal(),
                 fechaInicio: null,
                 fechaEntrega: null
@@ -902,7 +974,7 @@
             showCancelButton: true,
             confirmButtonText: 'Sí, salir',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#6f4e37'
+            confirmButtonColor: '#6c757d'
         }).then((result) => {
             if (result.isConfirmed) {
                 currentUser = null;
@@ -1138,7 +1210,7 @@
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Actualizar',
-                confirmButtonColor: '#6f4e37',
+                confirmButtonColor: '#6c757d',
                 preConfirm: () => {
                     const name = document.getElementById('swal-edit-name').value;
                     const username = document.getElementById('swal-edit-username').value;
@@ -1404,6 +1476,9 @@
         const clienteNombre = document.getElementById('clienteBusqueda').value;
         let clienteId = document.getElementById('clienteSeleccionadoId').value;
         
+        // Obtener estado de pago
+        const estadoPago = document.querySelector('input[name="estadoPago"]:checked').value;
+        
         // Si se ingresó un nombre de cliente y no está seleccionado de la lista, crear uno nuevo
         if (clienteNombre && !clienteId) {
             const clients = JSON.parse(localStorage.getItem('pezPostreClients'));
@@ -1437,6 +1512,7 @@
             metodoPago: document.getElementById('metodoPago').value,
             total: parseInt(document.getElementById('totalPagar').value),
             estado: 'pendiente',
+            estadoPago: estadoPago,
             fechaCreacion: obtenerFechaHoraLocal(),
             fechaInicio: null,
             fechaEntrega: null
@@ -1502,6 +1578,13 @@
             document.getElementById('cantidadTortas').value = route.cantidadTortas;
             document.getElementById('metodoPago').value = route.metodoPago;
             document.getElementById('totalPagar').value = route.total;
+            
+            // Cargar estado de pago
+            if (route.estadoPago === 'pagado') {
+                document.getElementById('pagoPagado').checked = true;
+            } else {
+                document.getElementById('pagoPendiente').checked = true;
+            }
             
             ocultarTodasLasSecciones();
             document.getElementById('crearRutaSection').classList.remove('hidden');
@@ -1578,7 +1661,7 @@
             showCancelButton: true,
             confirmButtonText: 'Sí, continuar',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#6f4e37'
+            confirmButtonColor: '#6c757d'
         }).then((result) => {
             if (result.isConfirmed) {
                 const routes = JSON.parse(localStorage.getItem('pezPostreRoutes'));
@@ -1605,6 +1688,55 @@
                     
                     cargarRutas();
                     actualizarStats();
+                }
+            }
+        });
+    }
+
+    function cambiarEstadoPago(routeId) {
+        Swal.fire({
+            title: 'Cambiar estado de pago',
+            html: `
+                <div class="d-flex flex-column gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="swal-estado-pago" id="swal-pagado" value="pagado">
+                        <label class="form-check-label" for="swal-pagado">
+                            <span class="status-badge status-pagado">Pagado</span>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="swal-estado-pago" id="swal-pendiente" value="pendiente" checked>
+                        <label class="form-check-label" for="swal-pendiente">
+                            <span class="status-badge status-pendiente-pago">Pendiente de Pago</span>
+                        </label>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Actualizar',
+            confirmButtonColor: '#6c757d',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const estadoPago = document.querySelector('input[name="swal-estado-pago"]:checked').value;
+                return { estadoPago };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const routes = JSON.parse(localStorage.getItem('pezPostreRoutes'));
+                const routeIndex = routes.findIndex(r => r.id === routeId);
+                
+                if (routeIndex !== -1) {
+                    routes[routeIndex].estadoPago = result.value.estadoPago;
+                    localStorage.setItem('pezPostreRoutes', JSON.stringify(routes));
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Estado de pago actualizado',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    cargarRutas();
                 }
             }
         });
@@ -1666,6 +1798,9 @@
                 estadoText = 'Entregado';
             }
             
+            let estadoPagoClass = route.estadoPago === 'pagado' ? 'status-pagado' : 'status-pendiente-pago';
+            let estadoPagoText = route.estadoPago === 'pagado' ? 'Pagado' : 'Pendiente de Pago';
+            
             let acciones = '';
             
             if (currentRole === 'admin') {
@@ -1677,6 +1812,12 @@
                         <i class="fas fa-trash"></i> Eliminar
                     </button>
                 `;
+            }
+            
+            if (currentRole === 'admin' || currentRole === 'despachador') {
+                acciones += `<button class="btn btn-sm btn-info text-white" onclick="cambiarEstadoPago(${route.id})">
+                                <i class="fas fa-money-bill"></i> Cambiar Pago
+                            </button>`;
             }
             
             if (currentRole === 'despachador' && route.estado === 'pendiente') {
@@ -1698,7 +1839,10 @@
                             <h6 class="mb-2">
                                 <i class="fas fa-user"></i> Domiciliario: ${route.domiciliarioNombre}
                             </h6>
-                            <span class="status-badge ${estadoClass} mb-2">${estadoText}</span>
+                            <div class="d-flex gap-2">
+                                <span class="status-badge ${estadoPagoClass} mb-2">${estadoPagoText}</span>
+                                <span class="status-badge ${estadoClass} mb-2">${estadoText}</span>
+                            </div>
                         </div>
                         
                         <div class="row">
